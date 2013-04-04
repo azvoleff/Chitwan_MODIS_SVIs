@@ -44,11 +44,23 @@ FOR i=0, N_ELEMENTS(suffixes)-1 DO BEGIN
   s = SIZE(date_array, /Dimensions)
   xsize = s[0]
   lineWidth = 1600
-    
   sData = STRTRIM(date_array, 2)
   sData[0:xsize-2, *] = sData[0:xsize-2, *] + ','
   OPENW, lun, output_csv_file, /Get_Lun, Width=lineWidth
   PRINTF, lun, 'DATE_CODE, YEAR, JULIAN_DAY'
+  PRINTF, lun, sData
+  FREE_LUN, lun
+  
+  ; Saves image list to a csv file (needed for TIMESAT)
+  image_files = REFORM(image_list, [1, count])
+  output_csv_file = output_folder + PATH_SEP() + suffix + '_image_files.csv'
+  s = SIZE(image_files, /Dimensions)
+  xsize = s[0]
+  lineWidth = 1600
+  sData = STRTRIM(image_files, 2)
+  sData[0:xsize-2, *] = sData[0:xsize-2, *] + ','
+  OPENW, lun, output_csv_file, /Get_Lun, Width=lineWidth
+  PRINTF, lun, count
   PRINTF, lun, sData
   FREE_LUN, lun
   
