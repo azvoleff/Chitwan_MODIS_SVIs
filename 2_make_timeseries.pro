@@ -51,14 +51,14 @@ FOR i=0, N_ELEMENTS(suffixes)-1 DO BEGIN
   PRINTF, lun, sData
   FREE_LUN, lun
   
-  ; Saves image list to a csv file (needed for TIMESAT)
+  ; Saves image list to a txt file (needed for TIMESAT)
   image_files = REFORM(image_list, [1, count])
-  output_csv_file = output_folder + PATH_SEP() + suffix + '_image_files.csv'
+  output_csv_file = output_folder + PATH_SEP() + suffix + '_image_files.txt'
   s = SIZE(image_files, /Dimensions)
   xsize = s[0]
   lineWidth = 1600
   sData = STRTRIM(image_files, 2)
-  sData[0:xsize-2, *] = sData[0:xsize-2, *] + ','
+  sData[0:xsize-2, *] = sData[0:xsize-2, *]
   OPENW, lun, output_csv_file, /Get_Lun, Width=lineWidth
   PRINTF, lun, count
   PRINTF, lun, sData
