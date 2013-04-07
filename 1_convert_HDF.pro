@@ -5,7 +5,8 @@ overall_time = SYSTIME(1)
 e = ENVI(/HEADLESS)
 
 
-input_folder = 'M:\Data\Nepal\Imagery\MODIS\MOD13Q1'
+;input_folder = 'G:\Data\Nepal\Imagery\MODIS\MOD13Q1'
+input_folder = 'G:\Data\Nepal\Imagery\MODIS\MYD13Q1'
 output_folder = 'D:\Workspace\TEMP\'
 
 ; Choose grids and setup parameters for conversion from HDF to ENVI format
@@ -100,7 +101,7 @@ ENDFOR
 
 ENVI_BATCH_EXIT
 PRINT, "************************************************************"
-PRINT, "             Completed MODIS pre-processing."
+PRINT, "      Completed MODIS format conversion and subsetting"
 PRINT, "************************************************************"
 PRINT, "Total processing time: ", STRTRIM(ROUND(SYSTIME(1) - overall_time),2), $
   " seconds"
