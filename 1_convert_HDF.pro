@@ -6,7 +6,14 @@ e = ENVI(/HEADLESS)
 
 
 ;input_folder = 'G:\Data\Nepal\Imagery\MODIS\MOD13Q1'
+;image_list = FILE_SEARCH(input_folder + PATH_SEP() + $
+;  'MOD13Q1.A*.h25v06.*.hdf', count=count, /TEST_READ)
+;year_regex = 'MOD13Q1.A[0-9]{7}.'
 input_folder = 'G:\Data\Nepal\Imagery\MODIS\MYD13Q1'
+image_list = FILE_SEARCH(input_folder + PATH_SEP() + $
+  'MYD13Q1.A*.h25v06.*.hdf', count=count, /TEST_READ)
+year_regex = 'MYD13Q1.A[0-9]{7}.'
+
 output_folder = 'D:\Workspace\TEMP\'
 
 ; Choose grids and setup parameters for conversion from HDF to ENVI format
@@ -23,9 +30,6 @@ out_method = 1
 out_ps_x = .00224577d
 out_ps_y = .00224577d
 
-image_list = FILE_SEARCH(input_folder + PATH_SEP() + $
-  'MOD13Q1.A*.h25v06.*.hdf', count=count, /TEST_READ)
-
 FOR i=0, count-1 DO BEGIN
   image_time = SYSTIME(1)
   
@@ -33,7 +37,7 @@ FOR i=0, count-1 DO BEGIN
   
   PRINT, 'Running HDF to ENVI format conversion on ', STRTRIM(input_hdf, 2)
   
-  year_string = STREGEX(FILE_BASENAME(input_hdf), 'MOD13Q1.A[0-9]{7}.', /extract)
+  year_string = STREGEX(FILE_BASENAME(input_hdf), year_regex, /extract)
   out_root = STREGEX(year_string, '[0-9]{7}', /extract)
   
   r_fid_array = []
