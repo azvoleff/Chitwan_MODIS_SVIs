@@ -4,7 +4,6 @@ overall_time = SYSTIME(1)
 
 e = ENVI(/HEADLESS)
 
-
 ;input_folder = 'G:\Data\Nepal\Imagery\MODIS\MOD13Q1'
 ;image_list = FILE_SEARCH(input_folder + PATH_SEP() + $
 ;  'MOD13Q1.A*.h25v06.*.hdf', count=count, /TEST_READ)
@@ -83,21 +82,21 @@ FOR i=0, count-1 DO BEGIN
   output_evi_image = out_root + '_EVI.img'
   ENVI_WRITE_ENVI_FILE, evi, OUT_NAME=output_evi_image, $
     MAP_INFO=map_info, R_FID=evi_fid
-  
+    
   output_quality_image = out_root + '_quality.img'
   ENVI_WRITE_ENVI_FILE, quality, OUT_NAME=output_quality_image, $
     MAP_INFO=map_info, R_FID=quality_fid
-  
+    
   output_reliability_image = out_root + '_reliability.img'
   ENVI_WRITE_ENVI_FILE, reliability, OUT_NAME=output_reliability_image, $
     MAP_INFO=map_info, R_FID=reliability_fid
-  
-  print, "Deleting intermediate files." 
+    
+  PRINT, "Deleting intermediate files."
   ENVI_FILE_MNG, id=reproj_fid, /REMOVE, /DELETE
   ENVI_FILE_MNG, id=evi_fid, /REMOVE
   ENVI_FILE_MNG, id=quality_fid, /REMOVE
   ENVI_FILE_MNG, id=reliability_fid, /REMOVE
-      
+  
   PRINT, "Processing time for ", STRTRIM(FILE_BASENAME(input_hdf), 2), $
     ": ", STRTRIM(ROUND(SYSTIME(1) - image_time), 2), " seconds"
   PRINT, "------------------------------------------------------------"
