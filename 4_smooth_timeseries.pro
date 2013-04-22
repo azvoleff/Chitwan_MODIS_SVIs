@@ -27,7 +27,7 @@ pixel_data_filtered = CONVOL(pixel_data, savgol_filter, /EDGE_TRUNCATE)
 p2 = plot(plot_x_vals, pixel_data_filtered, $
   NAME='Smoothed data', /OVERPLOT, THICK=2, COLOR=[0, 0, 255])
 
-l=LEGEND()
+l=LEGEND(/AUTO_TEXT_COLOR)
 
 PRINT, "------------------------------------------------------------"
 PRINT, "Processing time ", STRTRIM((ROUND(SYSTIME(1) - overall_time)/60.), 2), $
