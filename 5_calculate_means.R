@@ -15,3 +15,18 @@ mean_EVI <- apply(filt_data, 2, mean, na.rm=TRUE)
 trapz(as.numeric(image_dates$date)/365, mean_EVI)
 
 qplot(image_dates$date, mean_EVI, geom='line')
+
+###############################################################################
+# Calculate neighborhood-level EVI timeseries
+
+# First load CVFS nbh data sp dataframe
+
+
+# Make a n-NBH by n-MODIS timepts dataframe to store the results
+
+
+
+# Loop over MODIS timepoints
+
+# Use 'focal' to extract the points in a buffer around each NBH, taking the 
+# mean. Store the results in the results data frame
