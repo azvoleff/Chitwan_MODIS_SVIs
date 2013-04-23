@@ -21,7 +21,7 @@ for (n in 1:length(file_types)) {
     date_strings$JULIAN_DAY <- as.numeric(substr(date_strings$DATE_STRING, 5, 7))
     date_strings$PRODUCT <- regmatches(these_MODIS_files, regexpr(products_regex, these_MODIS_files))
 
-    image_dates_file <- paste('image_dates_', file_types[n], '.txt', sep='')
+    image_dates_file <- paste('image_dates_', file_types[n], '.csv', sep='')
     write.csv(date_strings, file=image_dates_file, row.names=FALSE)
 }
 
