@@ -1,4 +1,5 @@
-MODIS_DIR = 'G:/Data/Nepal/Imagery/MODIS/MODIS_EVI_Chitwan'
+#MODIS_DIR = 'G:/Data/Nepal/Imagery/MODIS/MODIS_EVI_Chitwan'
+MODIS_DIR = 'R:/Data/Nepal/Imagery/MODIS/MODIS_EVI_Included'
 file_types <- c('EVI', 'quality', 'reliability')
 products <- c('MOD13Q1', 'MYD13Q1')
 

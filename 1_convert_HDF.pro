@@ -4,11 +4,12 @@ overall_time = SYSTIME(1)
 
 e = ENVI(/HEADLESS)
 
-;MODIS_product = 'MOD13Q1'
-MODIS_product = 'MYD13Q1'
-input_folder = 'G:\Data\Nepal\Imagery\MODIS\' + MODIS_product 
+MODIS_product = 'MOD13Q1'
+;MODIS_product = 'MYD13Q1'
+;input_folder = 'G:\Data\Nepal\Imagery\MODIS\' + MODIS_product
+input_folder = 'R:\Data\Nepal\Imagery\MODIS\MOD13Q1_NEW'
 image_list = FILE_SEARCH(input_folder + PATH_SEP() + $
-   MODIS_product + '.A*.h25v06.*.hdf', count=count, /TEST_READ)
+  MODIS_product + '.A*.h25v06.*.hdf', count=count, /TEST_READ)
 year_regex = MODIS_product + '.A[0-9]{7}.'
 
 output_folder = 'D:\Workspace\TEMP\'
@@ -77,15 +78,15 @@ FOR i=0, count-1 DO BEGIN
   map_info.MC[2] = map_info.MC[2] + map_info.PS[0] * XF[0]
   map_info.MC[3] = map_info.MC[3] - map_info.PS[1] * YF[0]
   
-  output_evi_image = out_root + MODIS_product + '_EVI.img'
+  output_evi_image = out_root + '_' + MODIS_product + '_EVI.img'
   ENVI_WRITE_ENVI_FILE, evi, OUT_NAME=output_evi_image, $
     MAP_INFO=map_info, R_FID=evi_fid
     
-  output_quality_image = out_root + MODIS_product + '_quality.img'
+  output_quality_image = out_root + '_' + MODIS_product + '_quality.img'
   ENVI_WRITE_ENVI_FILE, quality, OUT_NAME=output_quality_image, $
     MAP_INFO=map_info, R_FID=quality_fid
     
-  output_reliability_image = out_root + MODIS_product + '_reliability.img'
+  output_reliability_image = out_root + '_' + MODIS_product + '_reliability.img'
   ENVI_WRITE_ENVI_FILE, reliability, OUT_NAME=output_reliability_image, $
     MAP_INFO=map_info, R_FID=reliability_fid
     
@@ -96,7 +97,7 @@ FOR i=0, count-1 DO BEGIN
   ENVI_FILE_MNG, id=reliability_fid, /REMOVE
   
   PRINT, "Processing time for ", STRTRIM(FILE_BASENAME(input_hdf), 2), $
-    ": ", STRTRIM(ROUND(SYSTIME(1) - image_time), 2), " seconds"
+    ": ", STRTRIM((ROUND(SYSTIME(1) - overall_time)/60.), 2), " minutes"
   PRINT, "------------------------------------------------------------"
 ENDFOR
 
@@ -104,7 +105,7 @@ ENVI_BATCH_EXIT
 PRINT, "************************************************************"
 PRINT, "      Completed MODIS format conversion and subsetting"
 PRINT, "************************************************************"
-PRINT, "Total processing time: ", STRTRIM(ROUND(SYSTIME(1) - overall_time),2), $
-  " seconds"
+PRINT, "Total processing time ", STRTRIM((ROUND(SYSTIME(1) - overall_time)/60.), 2), $
+  " minutes"
   
 END
