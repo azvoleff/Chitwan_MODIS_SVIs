@@ -1,7 +1,10 @@
 #MODIS_DIR = 'G:/Data/Nepal/Imagery/MODIS/MODIS_EVI_Chitwan'
-MODIS_DIR = 'R:/Data/Nepal/Imagery/MODIS/MODIS_EVI_Included'
-file_types <- c('EVI', 'quality', 'reliability')
-products <- c('MOD13Q1', 'MYD13Q1')
+#MODIS_DIR = 'R:/Data/Nepal/Imagery/MODIS/MODIS_EVI_Included'
+MODIS_DIR = 'R:/timesat311/compiled/Win32'
+#file_types <- c('EVI', 'quality', 'reliability')
+file_types <- c('EVI', 'reliability')
+#products <- c('MOD13Q1', 'MYD13Q1')
+products <- c('MOD13Q1')
 
 products_regex <- paste('(', paste(products, collapse='|'), ')', sep='') 
 regexes <- paste('^[0-9]{7}_', products_regex, '_', file_types, '.img$', sep='')
@@ -11,7 +14,8 @@ for (n in 1:length(file_types)) {
     these_MODIS_files <- MODIS_files[grepl(regexes[n], MODIS_files)]
     these_MODIS_files <- file.path(MODIS_DIR, these_MODIS_files)
 
-    image_list_file <- paste('image_list_', file_types[n], '.txt', sep='')
+    image_list_file <- file.path(MODIS_DIR, paste('image_list_', file_types[n], 
+                                                  '.txt', sep=''))
 
     write.table(c(length(these_MODIS_files), these_MODIS_files),
                 file=image_list_file, quote=FALSE, col.names=FALSE, 
@@ -22,7 +26,9 @@ for (n in 1:length(file_types)) {
     date_strings$JULIAN_DAY <- as.numeric(substr(date_strings$DATE_STRING, 5, 7))
     date_strings$PRODUCT <- regmatches(these_MODIS_files, regexpr(products_regex, these_MODIS_files))
 
-    image_dates_file <- paste('image_dates_', file_types[n], '.csv', sep='')
+    image_dates_file <- file.path(MODIS_DIR, paste('image_dates_', 
+                                                   file_types[n], '.csv', 
+                                                   sep=''))
     write.csv(date_strings, file=image_dates_file, row.names=FALSE)
 }
 
