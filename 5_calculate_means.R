@@ -24,18 +24,3 @@ stacked <- data.frame(EVI=c(filt_mean_EVI, orig_mean_EVI),
 qplot(Date, EVI, geom='line', colour=Series, 
       linetype=Series, data=stacked)
 
-###############################################################################
-# Calculate neighborhood-level EVI timeseries
-
-# First load CVFS nbh data sp dataframe
-nbhhist <- read.xport("W:/Nepal/ICPSR_0538_Restricted/da04538-0014_REST.xpt")
-ID_cols <- grep('^(NEIGHID|STRATA|NX|NY)$', names(nbhhist))
-nbhs <- nbhhist[ID_cols]
-
-# Make a n-NBH by n-MODIS timepts dataframe to store the results
-
-# Loop over MODIS timepoints
-
-# Use 'focal' to extract the points in a buffer around each NBH, taking the 
-# mean. Store the results in the results data frame
-
