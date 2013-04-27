@@ -1,6 +1,4 @@
-#MODIS_DIR = 'G:/Data/Nepal/Imagery/MODIS/MODIS_EVI_Chitwan'
-#MODIS_DIR = 'R:/Data/Nepal/Imagery/MODIS/MODIS_EVI_Included'
-MODIS_DIR = 'R:/timesat311/compiled/Win32'
+MODIS_DIR = 'R:/timesat311/data/Chitwan_MOD13Q1_Cropped'
 #file_types <- c('EVI', 'quality', 'reliability')
 file_types <- c('EVI', 'reliability')
 #products <- c('MOD13Q1', 'MYD13Q1')
@@ -21,7 +19,9 @@ for (n in 1:length(file_types)) {
                 file=image_list_file, quote=FALSE, col.names=FALSE, 
                 row.names=FALSE)
 
-    date_strings <- data.frame(DATE_STRING=regmatches(these_MODIS_files, regexpr('[0-9]{7}', these_MODIS_files)))
+    date_strings <- data.frame(DATE_STRING=regmatches(these_MODIS_files, 
+                                                      regexpr('[0-9]{7}', 
+                                                              these_MODIS_files)))
     date_strings$YEAR <- as.numeric(substr(date_strings$DATE_STRING, 1, 4))
     date_strings$JULIAN_DAY <- as.numeric(substr(date_strings$DATE_STRING, 5, 7))
     date_strings$PRODUCT <- regmatches(these_MODIS_files, regexpr(products_regex, these_MODIS_files))
