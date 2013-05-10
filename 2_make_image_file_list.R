@@ -1,4 +1,4 @@
-MODIS_DIR = 'R:/timesat311/data/Chitwan_MOD13Q1_Cropped'
+MODIS_DIR = 'R:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped'
 #file_types <- c('EVI', 'quality', 'reliability')
 file_types <- c('EVI', 'reliability')
 #products <- c('MOD13Q1', 'MYD13Q1')
