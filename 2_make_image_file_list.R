@@ -1,11 +1,10 @@
-MODIS_DIR = 'R:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped'
-#file_types <- c('EVI', 'quality', 'reliability')
-file_types <- c('EVI', 'reliability')
+MODIS_DIR = 'G:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped'
+file_types <- c('EVI_scaled_flt16', 'reliability_flt16')
 #products <- c('MOD13Q1', 'MYD13Q1')
 products <- c('MOD13Q1')
 
 products_regex <- paste('(', paste(products, collapse='|'), ')', sep='') 
-regexes <- paste('^[0-9]{7}_', products_regex, '_', file_types, '.img$', sep='')
+regexes <- paste('^[0-9]{7}_', products_regex, '_', file_types, '.envi$', sep='')
 
 MODIS_files <- list.files(MODIS_DIR)
 for (n in 1:length(file_types)) {
