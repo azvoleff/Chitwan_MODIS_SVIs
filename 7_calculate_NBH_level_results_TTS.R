@@ -72,25 +72,13 @@ for (buffer_dist_m in buffer_dists_m) {
 }
 save(tts_results, file='CVFS_NBHs_MODIS_tts_fit.Rdata')
 
-EVI_daily_stats <- ddply(tts_results, .(Date), summarize,
-                  mean=mean(mean_EVI_250m),
-                  min=min(mean_EVI_250m),
-                  max=max(mean_EVI_250m),
-                  sd=sd(mean_EVI_250m))
-
-EVI_annual_stats <- ddply(tts_results, .(Year), summarize,
-                  mean=mean(mean_EVI_250m),
-                  min=min(mean_EVI_250m),
-                  max=max(mean_EVI_250m),
-                  sd=sd(mean_EVI_250m))
-
-# Note that there are 22 time points per year (1 every 16 days, with last on 
-# day 352 of the year).
-filter_size_6mth <- 22 * .5
+# Note that there are 23 time points per year (1 every 16 days, with last on 
+# day 353 of the year).
+filter_size_6mth <- 23 * .5
 filter_coefs_6mth <- rep(1/filter_size_6mth, filter_size_6mth)
-filter_size_1yr <- 22 * 1
+filter_size_1yr <- 23 * 1
 filter_coefs_1yr <- rep(1/filter_size_1yr, filter_size_1yr)
-filter_size_2yr <- 22 * 2
+filter_size_2yr <- 23 * 2
 filter_coefs_2yr <- rep(1/filter_size_2yr, filter_size_2yr)
 # Note that sides=1 is used in below filter commands to ensure filter includes 
 # past values only (otherwise the filter would by default be centered around 
@@ -136,6 +124,17 @@ EVI_indicators <- ddply(EVI_indicators, .(NEIGHID), transform,
                         mean_EVI_500m_1yr_norm=mean_EVI_500m_1yr/mean_EVI_500m_1yr[13],
                         mean_EVI_250m_2yr_norm=mean_EVI_250m_2yr/mean_EVI_250m_2yr[24],
                         mean_EVI_500m_2yr_norm=mean_EVI_500m_2yr/mean_EVI_500m_2yr[24])
+# Add indicators for monsoon, winter, and spring
+EVI_indicators$Season <- NA
+EVI_indicators$Season[EVI_indicators$Month %in% c(6, 7, 8, 9)] <- 'Monsoon (JJAS)'
+EVI_indicators$Season[EVI_indicators$Month %in% c(10, 11, 12, 1)] <- 'Winter (ONDJ)'
+EVI_indicators$Season[EVI_indicators$Month %in% c(2, 3, 4, 5)] <- 'Spring (FMAM)'
+EVI_indicators$Season <- factor(EVI_indicators$Season, levels=c('Spring (FMAM)', 'Monsoon (JJAS)', 'Winter (ONDJ)'))
+# Add a variable for the starting year of each season (winter starts the year 
+# prior for Jan and Feb months)
+EVI_indicators$season_start_year <- EVI_indicators$Year
+EVI_indicators$season_start_year[EVI_indicators$Month == 1] <- EVI_indicators$Year[EVI_indicators$Month == 1] - 1
+
 save(EVI_indicators, file='EVI_indicators.Rdata')
 
 # Find any neighborhoods with zero mean EVIs
@@ -143,20 +142,6 @@ save(EVI_indicators, file='EVI_indicators.Rdata')
 #      !is.na(EVI_indicators$mean_EVI_250m_2yr),]$NEIGHID)
 #table(EVI_indicators[EVI_indicators$mean_EVI_500m_2yr == 0 & 
 #      !is.na(EVI_indicators$mean_EVI_500m_2yr),]$NEIGHID)
-
-qplot(Date, mean_EVI_250m, geom='line', colour=NEIGHID, data=EVI_indicators)
-
-qplot(Date, mean_EVI_250m_6mth, geom='line', colour=NEIGHID, data=EVI_indicators)
-
-qplot(Date, mean_EVI_250m_1yr, geom='line', colour=NEIGHID, data=EVI_indicators)
-
-qplot(Date, mean_EVI_250m_2yr, geom='line', colour=NEIGHID, data=EVI_indicators)
-
-qplot(Date, mean_EVI_250m_6mth_norm, geom='line', colour=NEIGHID, data=EVI_indicators)
-
-qplot(Date, mean_EVI_250m_1yr_norm, geom='line', colour=NEIGHID, data=EVI_indicators)
-
-qplot(Date, mean_EVI_250m_2yr_norm, geom='line', colour=NEIGHID, data=EVI_indicators)
 
 ###############################################################################
 # EVI indicator plots
@@ -259,10 +244,56 @@ png('mean_EVI_250m_2yr_norm.png', width=PLOT_WIDTH*PLOT_DPI,
 print(mean_EVI_250m_2yr_norm_plot)
 dev.off()
 
-EVI_daily_stats$mean_2yr_roll <- filter(EVI_daily_stats$mean, filter_coefs)
+EVI_daily_stats <- ddply(tts_results, .(Date), summarize,
+                  mean=mean(mean_EVI_250m),
+                  min=min(mean_EVI_250m),
+                  max=max(mean_EVI_250m),
+                  sd=sd(mean_EVI_250m))
+
+EVI_annual_stats <- ddply(tts_results, .(Year), summarize,
+                  mean=mean(mean_EVI_250m),
+                  min=min(mean_EVI_250m),
+                  max=max(mean_EVI_250m),
+                  sd=sd(mean_EVI_250m))
+
+EVI_daily_stats$mean_2yr_roll <- filter(EVI_daily_stats$mean, filter_coefs_2yr)
 
 ggplot(EVI_daily_stats, aes(Date, mean)) + geom_line() + xlab('Time') +
     ylab('EVI mean (16 day)')
 
 ggplot(EVI_daily_stats, aes(Date, mean_2yr_roll)) + geom_line() + xlab('Time') +
     ylab('2-year rolling mean EVI')
+
+###############################################################################
+# Plot 1-year mean EVI stratified by percentage with access to irrigation
+load('C:/Users/azvoleff/Code/R/Chitwan_R_files/HHAg/t2_irrigation.Rdata')
+
+irrig_data$NEIGHID <- as.character(irrig_data$T2_NEIGH)
+irrig_data <- irrig_data[names(irrig_data) != 'T2_NEIGH']
+
+EVI_indicators <- merge(EVI_indicators, irrig_data)
+
+hist(irrig_data$frac_bari_irrig_none)
+EVI_indicators$frac_bari_irrig_none_cut <- cut(irrig_data$frac_bari_irrig_none, c(0, .25, 1), include.lowest=TRUE)
+table(EVI_indicators$frac_bari_irrig_none_cut)
+
+hist(irrig_data$frac_bari_any_irrig)
+EVI_indicators$frac_bari_any_irrig_cut <- cut(irrig_data$frac_bari_any_irrig, c(0, .25, 1), include.lowest=TRUE)
+table(EVI_indicators$frac_bari_any_irrig_cut)
+
+EVI_indicators_irrig <- ddply(EVI_indicators, .(Season, Year, frac_bari_any_irrig_cut), summarize,
+                              Year=Year[1],
+                              mean_EVI_250m=mean(mean_EVI_250m))
+mean_EVI_250m_irrig_plot <- ggplot(EVI_indicators_irrig, aes(Year, mean_EVI_250m)) + 
+       geom_line(aes(colour=frac_bari_any_irrig_cut)) + facet_grid(Season~.) +
+       labs(colour='Fraction with irrigation') +
+       theme(legend.position='bottom') +
+       ylab('Mean EVI') + xlab('Year') +
+       #geom_text(aes(x=as.Date("2004/06/15"), y=202, label="CVFS Registry Data"), size=8)
+       #geom_text(aes(x=as.Date("2004/06/15"), y=195, label="(2002-2007)"), size=8)
+       #geom_rect(aes(xmin=as.Date('2002/01/01'), xmax=as.Date('2007/01/01'), 
+       #              ymin=75, ymax=200), alpha=.002) +
+png('mean_EVI_250m_irrig.png', width=PLOT_WIDTH*PLOT_DPI, 
+    height=PLOT_HEIGHT*PLOT_DPI)
+print(mean_EVI_250m_irrig_plot)
+dev.off()
