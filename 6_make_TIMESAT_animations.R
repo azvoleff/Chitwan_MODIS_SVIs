@@ -1,7 +1,6 @@
 library(ggplot2)
 library(lubridate)
 require(animation)
-require(fields) # for colorbar.plot
 
 source('tpa2df.R')
 source('tpadf2raster.R')
