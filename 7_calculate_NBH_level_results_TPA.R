@@ -5,6 +5,7 @@ library(ggplot2)
 library(lubridate)
 library(raster)
 library(rgdal)
+library(plyr)
 
 ###############################################################################
 # Calculate neighborhood-level EVI timeseries
@@ -74,25 +75,21 @@ for (variable in variables) {
         tpa_results <- cbind(tpa_results, extract_vals)
     }
 }
-save(tpa_results, file='CVFS_NBHs_MODIS_tpa.Rdata')
+qplot(Year, start_julian_250m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
 
-qplot(Year, start_julian_250m, geom='line', colour=NEIGHID, data=tpa_results)
+qplot(Year, end_julian_250m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
 
-qplot(Year, end_julian_250m, geom='line', colour=NEIGHID, data=tpa_results)
+qplot(Year, peak_value_250m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
 
-qplot(Year, peak_value_250m, geom='line', colour=NEIGHID, data=tpa_results)
+qplot(Year, peak_value_500m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
 
-qplot(Year, peak_value_500m, geom='line', colour=NEIGHID, data=tpa_results)
+qplot(Year, length_days_500m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
 
-qplot(Year, length_days_500m, geom='line', colour=NEIGHID, data=tpa_results)
+qplot(Year, amp_250m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
 
-qplot(Year, amp_250m, geom='line', colour=NEIGHID, data=tpa_results)
-
-qplot(Year, amp_500m, geom='line', colour=NEIGHID, data=tpa_results)
+qplot(Year, amp_500m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
 
 filter_years <- 2
-# Note that there are 22 time points per year (1 every 16 days, with last on 
-# day 352 of the year).
 filter_size <- 1*filter_years
 filter_coefs <- rep(1/filter_size, filter_size)
 tpa_results <- ddply(tpa_results, .(NEIGHID), transform,
@@ -101,10 +98,14 @@ tpa_results <- ddply(tpa_results, .(NEIGHID), transform,
                      mean_amp_500m_2yr=filter(as.matrix(amp_500m), 
                                               filter_coefs, sides=1))
 
+save(tpa_results, file='CVFS_NBHs_MODIS_tpa.Rdata')
 
 seasonal_summary <- ddply(tpa_results, .(Year), summarize,
+                     mean_amp_250m=mean(amp_250m, na.rm=TRUE),
+                     mean_amp_500m=mean(amp_500m, na.rm=TRUE),
+                     mean_amp_250m_2yr=mean(mean_amp_250m_2yr),
                      mean_amp_250m_2yr=mean(mean_amp_250m_2yr))
+
+qplot(Year, mean_amp_250m, data=seasonal_summary, geom='line')
+
 qplot(Year, mean_amp_250m_2yr, data=seasonal_summary, geom='line')
-
-save(seasonal_indic, file='seasonal_indic.Rdata')
-
