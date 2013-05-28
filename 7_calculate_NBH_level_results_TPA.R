@@ -13,13 +13,13 @@ library(plyr)
 source('tpa2df.R')
 source('tpadf2raster.R')
 
-tpa_file_name <- 'G:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/Chitwan_MOD13Q1_EVI_Full_Series_Cropped_Expanded_TS.tpa'
+tpa_file_name <- 'R:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/Chitwan_MOD13Q1_EVI_Full_Series_Cropped_Expanded_TS.tpa'
 tpa_df <- tpa2df(tpa_file_name, 11)
 
-base_image_file <- 'G:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/2000001_MOD13Q1_EVI_scaled_flt16.envi'
+base_image_file <- 'R:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/2000001_MOD13Q1_EVI_scaled_flt16.envi'
 
 # First load CVFS nbh data  and convert to sp dataframe
-cvfs_nbhs <- readOGR('G:/Data/Nepal/GIS/CVFS_Data', 'cvfsns_with_elevations')
+cvfs_nbhs <- readOGR('R:/Data/Nepal/GIS/CVFS_Data', 'cvfsns_with_elevations')
 cvfs_nbhs <- cvfs_nbhs[cvfs_nbhs$NID <= 151, ]
 cvfs_nbhs$NEIGHID <- sprintf("%03i", cvfs_nbhs$NID)
 nbhs <- spTransform(cvfs_nbhs, CRS=CRS(projection(raster(base_image_file))))
@@ -28,7 +28,10 @@ nbhs <- spTransform(cvfs_nbhs, CRS=CRS(projection(raster(base_image_file))))
 #plot(raster(base_image_file)[[1]])
 #points(nbhs)
 
-CVFS_area_mask <- raster('G:/Data/Nepal/Imagery/MODIS/AOIs/CVFS_Study_Area_mask.img')
+CVFS_area_mask <- raster('R:/Data/Nepal/Imagery/MODIS/AOIs/CVFS_Study_Area_mask.img')
+projection(CVFS_area_mask) <- projection(raster(base_image_file))
+extent(CVFS_area_mask) <- extent(raster(base_image_file))
+res(CVFS_area_mask) <- res(raster(base_image_file))
 
 # Add fields converting the start, end, and peak times in the dataframe into 
 # Julian days, and convert the length field into actual days. Note that %j 
@@ -43,13 +46,6 @@ tpa_df$peak_time_julian <- as.numeric(format(start_date + tpa_df$peak_time
                                              * (365.25/23), '%j'))
 tpa_df$length_days <- as.numeric(tpa_df$length * (365.25/23))
 
-hist(tpa_df$start_julian)
-hist(tpa_df$end_julian)
-hist(tpa_df$peak_time_julian)
-hist(tpa_df$length_days)
-
-table(tpa_df$length_days > 365)
-
 # Dates is a vector of season start dates (the year of the season start date 
 # only).
 dates <- year(seq(as.Date('2000/01/01'), as.Date('2010/01/01'), by='year'))
@@ -61,12 +57,11 @@ buffer_dists_m <- c(250, 500)
 variables <- c('start_julian', 'end_julian', 'length_days', 'base_value', 
                'peak_time_julian', 'peak_value', 'amp')
 for (variable in variables) {
+    tparaster <- tpadf2raster(tpa_df, base_image_file, variable)
+    # Mask values outside CVFS study area (so rivers, Barandabar, etc. 
+    # are not included in EVI calculation).
+    tparaster <- mask(tparaster, CVFS_area_mask, maskvalue=0)
     for (buffer_dist_m in buffer_dists_m) {
-        tparaster <- tpadf2raster(tpa_df, base_image_file, variable)
-        # Mask values outside CVFS study area (so rivers, Barandabar, etc. 
-        # are not included in EVI calculation).
-        tparaster <- setValues(tparaster, getValues(tparaster) * 
-                               getValues(CVFS_area_mask))
         # Note that buffer is in meters
         extract_vals <- data.frame(as.vector(extract(tparaster, nbhs, 
                                                      buffer=buffer_dist_m, 

@@ -16,13 +16,13 @@ source('ttsdf2raster.R')
 # Below just used to set uniform plotting options for dissertation plots
 source('C:/Users/azvoleff/Code/R/Chitwan_R_files/Climate/0_utility_functions.R')
 
-tts_file_name <- 'G:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/Chitwan_MOD13Q1_EVI_Full_Series_Cropped_Expanded_fit.tts'
+tts_file_name <- 'R:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/Chitwan_MOD13Q1_EVI_Full_Series_Cropped_Expanded_fit.tts'
 tts_df <- tts2df(tts_file_name)
 
-base_image_file <- 'G:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/2000001_MOD13Q1_EVI_scaled_flt16.envi'
+base_image_file <- 'R:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/2000001_MOD13Q1_EVI_scaled_flt16.envi'
 
 # Load CVFS nbh data  and convert to sp dataframe
-cvfs_nbhs <- readOGR('G:/Data/Nepal/GIS/CVFS_Data', 'cvfsns_with_elevations')
+cvfs_nbhs <- readOGR('R:/Data/Nepal/GIS/CVFS_Data', 'cvfsns_with_elevations')
 cvfs_nbhs <- cvfs_nbhs[cvfs_nbhs$NID <= 151, ]
 cvfs_nbhs$NEIGHID <- sprintf("%03i", cvfs_nbhs$NID)
 nbhs <- spTransform(cvfs_nbhs, CRS=CRS(projection(raster(base_image_file))))
@@ -31,17 +31,10 @@ nbhs <- spTransform(cvfs_nbhs, CRS=CRS(projection(raster(base_image_file))))
 #plot(raster(base_image_file)[[1]])
 #points(nbhs)
 
-CVFS_area_mask <- raster('G:/Data/Nepal/Imagery/MODIS/AOIs/CVFS_Study_Area_mask_float.img')
-
-# Below is for debug only
-#projection(CVFS_area_mask) <- projection(raster(base_image_file))
-#extent(CVFS_area_mask) <- extent(raster(base_image_file))
-#res(CVFS_area_mask) <- res(raster(base_image_file))
-#writeRaster(raster(base_image_file), 'D:/Workspace/TEMP/base_image.envi', 
-#            overwrite=TRUE)
-#writeRaster(CVFS_area_mask, 'D:/Workspace/TEMP/CVFS_area_mask.envi', 
-#            overwrite=TRUE)
-#writeOGR(nbhs, 'D:/Workspace/TEMP', 'CVFS_NBHs', driver="ESRI Shapefile")
+CVFS_area_mask <- raster('R:/Data/Nepal/Imagery/MODIS/AOIs/CVFS_Study_Area_mask_float.img')
+projection(CVFS_area_mask) <- projection(raster(base_image_file))
+extent(CVFS_area_mask) <- extent(raster(base_image_file))
+res(CVFS_area_mask) <- res(raster(base_image_file))
 
 days <- seq(1, 365, 16)
 years <- rep(seq(2000, 2012), each=length(days))
@@ -59,8 +52,7 @@ tts_results$Day <- day(tts_results$Date)
 ttsraster <- ttsdf2raster(tts_df, base_image_file)
 # Mask values outside CVFS study area (so rivers, Barandabar, etc. 
 # are not included in EVI calculation).
-ttsraster <- setValues(ttsraster, getValues(ttsraster) * 
-                       getValues(CVFS_area_mask))
+ttsraster <- mask(ttsraster, CVFS_area_mask, maskvalue=0)
 buffer_dists_m <- c(250, 500)
 for (buffer_dist_m in buffer_dists_m) {
     # Note that buffer is in meters
