@@ -264,6 +264,8 @@ png('valley_means_dates_melt.png', width=PLOT_WIDTH*PLOT_DPI,
 print(valley_means_dates_melt_plot)
 dev.off()
 
+save(valley_means, file='EVI_seasonal_indicators_mean_over_valley.Rdata')
+
 ###############################################################################
 # Plot compared to precip time series derived monsoon onset dates
 
