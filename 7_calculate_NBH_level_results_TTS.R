@@ -16,13 +16,13 @@ source('ttsdf2raster.R')
 # Below just used to set uniform plotting options for dissertation plots
 source('C:/Users/azvoleff/Code/R/Chitwan_R_files/Climate/0_utility_functions.R')
 
-tts_file_name <- 'R:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/Chitwan_MOD13Q1_EVI_Full_Series_Cropped_Expanded_fit.tts'
+tts_file_name <- 'G:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/Chitwan_MOD13Q1_EVI_Full_Series_Cropped_Expanded_fit.tts'
 tts_df <- tts2df(tts_file_name)
 
-base_image_file <- 'R:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/2000001_MOD13Q1_EVI_scaled_flt16.envi'
+base_image_file <- 'G:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/2000001_MOD13Q1_EVI_scaled_flt16.envi'
 
 # Load CVFS nbh data  and convert to sp dataframe
-cvfs_nbhs <- readOGR('R:/Data/Nepal/GIS/CVFS_Data', 'cvfsns_with_elevations')
+cvfs_nbhs <- readOGR('G:/Data/Nepal/GIS/CVFS_Data', 'cvfsns_with_elevations')
 cvfs_nbhs <- cvfs_nbhs[cvfs_nbhs$NID <= 151, ]
 cvfs_nbhs$NEIGHID <- sprintf("%03i", cvfs_nbhs$NID)
 nbhs <- spTransform(cvfs_nbhs, CRS=CRS(projection(raster(base_image_file))))
@@ -31,7 +31,7 @@ nbhs <- spTransform(cvfs_nbhs, CRS=CRS(projection(raster(base_image_file))))
 #plot(raster(base_image_file)[[1]])
 #points(nbhs)
 
-CVFS_area_mask <- raster('R:/Data/Nepal/Imagery/MODIS/AOIs/CVFS_Study_Area_mask_float.img')
+CVFS_area_mask <- raster('G:/Data/Nepal/Imagery/MODIS/AOIs/CVFS_Study_Area_mask_float.img')
 projection(CVFS_area_mask) <- projection(raster(base_image_file))
 extent(CVFS_area_mask) <- extent(raster(base_image_file))
 res(CVFS_area_mask) <- res(raster(base_image_file))
@@ -68,28 +68,29 @@ save(tts_results, file='CVFS_NBHs_MODIS_tts_fit.Rdata')
 # day 353 of the year).
 filter_size_6mth <- 23 * .5
 filter_coefs_6mth <- rep(1/filter_size_6mth, filter_size_6mth)
-filter_size_1yr <- 23 * 1
-filter_coefs_1yr <- rep(1/filter_size_1yr, filter_size_1yr)
-filter_size_2yr <- 23 * 2
-filter_coefs_2yr <- rep(1/filter_size_2yr, filter_size_2yr)
+filter_size_12mth <- 23 * 1
+filter_coefs_12mth <- rep(1/filter_size_12mth, filter_size_12mth)
+filter_size_24mth <- 23 * 2
+filter_coefs_24mth <- rep(1/filter_size_24mth, filter_size_24mth)
 # Note that sides=1 is used in below filter commands to ensure filter includes 
 # past values only (otherwise the filter would by default be centered around 
 # lag 0, which would mean future values would be used in the average). We don't 
 # want future values in the average as these time series will be used to model 
 # human decisions based on past climate.
+#
 tts_results <- ddply(tts_results, .(NEIGHID), transform,
                      mean_EVI_250m_6mth=filter(as.matrix(mean_EVI_250m),
                                               filter_coefs_6mth, sides=1),
                      mean_EVI_500m_6mth=filter(as.matrix(mean_EVI_500m),
                                               filter_coefs_6mth, sides=1),
-                     mean_EVI_250m_1yr=filter(as.matrix(mean_EVI_250m),
-                                              filter_coefs_1yr, sides=1),
-                     mean_EVI_500m_1yr=filter(as.matrix(mean_EVI_500m),
-                                              filter_coefs_1yr, sides=1),
-                     mean_EVI_250m_2yr=filter(as.matrix(mean_EVI_250m),
-                                              filter_coefs_2yr, sides=1),
-                     mean_EVI_500m_2yr=filter(as.matrix(mean_EVI_500m),
-                                              filter_coefs_2yr, sides=1))
+                     mean_EVI_250m_12mth=filter(as.matrix(mean_EVI_250m),
+                                              filter_coefs_12mth, sides=1),
+                     mean_EVI_500m_12mth=filter(as.matrix(mean_EVI_500m),
+                                              filter_coefs_12mth, sides=1),
+                     mean_EVI_250m_24mth=filter(as.matrix(mean_EVI_250m),
+                                              filter_coefs_24mth, sides=1),
+                     mean_EVI_500m_24mth=filter(as.matrix(mean_EVI_500m),
+                                              filter_coefs_24mth, sides=1))
 # Now take monthly mean of the rolling mean values, as the hhreg data is 
 # collected only once per month.
 EVI_indicators <- ddply(tts_results, .(NEIGHID, Year, Month), summarize,
@@ -101,10 +102,10 @@ EVI_indicators <- ddply(tts_results, .(NEIGHID, Year, Month), summarize,
                         max_EVI_500m=max(mean_EVI_500m),
                         mean_EVI_250m_6mth=mean(mean_EVI_250m_6mth),
                         mean_EVI_500m_6mth=mean(mean_EVI_500m_6mth),
-                        mean_EVI_250m_1yr=mean(mean_EVI_250m_1yr),
-                        mean_EVI_500m_1yr=mean(mean_EVI_500m_1yr),
-                        mean_EVI_250m_2yr=mean(mean_EVI_250m_2yr),
-                        mean_EVI_500m_2yr=mean(mean_EVI_500m_2yr))
+                        mean_EVI_250m_12mth=mean(mean_EVI_250m_12mth),
+                        mean_EVI_500m_12mth=mean(mean_EVI_500m_12mth),
+                        mean_EVI_250m_24mth=mean(mean_EVI_250m_24mth),
+                        mean_EVI_500m_24mth=mean(mean_EVI_500m_24mth))
 EVI_indicators$Date <- as.Date(paste(EVI_indicators$Year, 
                                      EVI_indicators$Month, 15),'%Y %m %d')
 # Normalize by Jan 2000 - Dec 2001 mean (which is stored in row 24 for 
@@ -112,10 +113,10 @@ EVI_indicators$Date <- as.Date(paste(EVI_indicators$Year,
 EVI_indicators <- ddply(EVI_indicators, .(NEIGHID), transform,
                         mean_EVI_250m_6mth_norm=mean_EVI_250m_6mth/mean_EVI_250m_6mth[7],
                         mean_EVI_500m_6mth_norm=mean_EVI_500m_6mth/mean_EVI_500m_6mth[7],
-                        mean_EVI_250m_1yr_norm=mean_EVI_250m_1yr/mean_EVI_250m_1yr[13],
-                        mean_EVI_500m_1yr_norm=mean_EVI_500m_1yr/mean_EVI_500m_1yr[13],
-                        mean_EVI_250m_2yr_norm=mean_EVI_250m_2yr/mean_EVI_250m_2yr[24],
-                        mean_EVI_500m_2yr_norm=mean_EVI_500m_2yr/mean_EVI_500m_2yr[24])
+                        mean_EVI_250m_12mth_norm=mean_EVI_250m_12mth/mean_EVI_250m_12mth[13],
+                        mean_EVI_500m_12mth_norm=mean_EVI_500m_12mth/mean_EVI_500m_12mth[13],
+                        mean_EVI_250m_24mth_norm=mean_EVI_250m_24mth/mean_EVI_250m_24mth[25],
+                        mean_EVI_500m_24mth_norm=mean_EVI_500m_24mth/mean_EVI_500m_24mth[25])
 # Add indicators for monsoon, winter, and spring
 EVI_indicators$Season <- NA
 EVI_indicators$Season[EVI_indicators$Month %in% c(6, 7, 8, 9)] <- 'Monsoon (JJAS)'
@@ -130,10 +131,10 @@ EVI_indicators$season_start_year[EVI_indicators$Month == 1] <- EVI_indicators$Ye
 save(EVI_indicators, file='EVI_indicators.Rdata')
 
 # Find any neighborhoods with zero mean EVIs
-#table(EVI_indicators[EVI_indicators$mean_EVI_250m_2yr == 0 & 
-#      !is.na(EVI_indicators$mean_EVI_250m_2yr),]$NEIGHID)
-#table(EVI_indicators[EVI_indicators$mean_EVI_500m_2yr == 0 & 
-#      !is.na(EVI_indicators$mean_EVI_500m_2yr),]$NEIGHID)
+#table(EVI_indicators[EVI_indicators$mean_EVI_250m_24mth == 0 & 
+#      !is.na(EVI_indicators$mean_EVI_250m_24mth),]$NEIGHID)
+#table(EVI_indicators[EVI_indicators$mean_EVI_500m_24mth == 0 & 
+#      !is.na(EVI_indicators$mean_EVI_500m_24mth),]$NEIGHID)
 
 ###############################################################################
 # EVI indicator plots
@@ -155,7 +156,7 @@ print(mean_EVI_250m_6mth_plot)
 dev.off()
 
 # Make 1 year plot
-mean_EVI_250m_1yr_plot <- ggplot(EVI_indicators, aes(Date, mean_EVI_250m_1yr)) + 
+mean_EVI_250m_12mth_plot <- ggplot(EVI_indicators, aes(Date, mean_EVI_250m_12mth)) + 
        geom_line(aes(colour=NEIGHID)) + guides(colour=FALSE) +
        ylab('12-month mean EVI') + xlab('Date') +
        xlim(c(as.Date('2002/01/01'), as.Date('2012/01/01'))) +
@@ -165,13 +166,13 @@ mean_EVI_250m_1yr_plot <- ggplot(EVI_indicators, aes(Date, mean_EVI_250m_1yr)) +
        #geom_text(aes(x=as.Date("2004/06/15"), y=195, label="(2002-2007)"), size=8)
        #geom_rect(aes(xmin=as.Date('2002/01/01'), xmax=as.Date('2007/01/01'), 
        #              ymin=75, ymax=200), alpha=.002) +
-png('mean_EVI_250m_1yr.png', width=PLOT_WIDTH*PLOT_DPI, 
+png('mean_EVI_250m_12mth.png', width=PLOT_WIDTH*PLOT_DPI, 
     height=PLOT_HEIGHT*PLOT_DPI)
-print(mean_EVI_250m_1yr_plot)
+print(mean_EVI_250m_12mth_plot)
 dev.off()
 
 # Make 2 year plot
-mean_EVI_250m_2yr_plot <- ggplot(EVI_indicators, aes(Date, mean_EVI_250m_2yr)) + 
+mean_EVI_250m_24mth_plot <- ggplot(EVI_indicators, aes(Date, mean_EVI_250m_24mth)) + 
        geom_line(aes(colour=NEIGHID)) + guides(colour=FALSE) +
        ylab('24-month mean EVI') + xlab('Date') +
        xlim(c(as.Date('2002/01/01'), as.Date('2012/01/01'))) +
@@ -181,9 +182,9 @@ mean_EVI_250m_2yr_plot <- ggplot(EVI_indicators, aes(Date, mean_EVI_250m_2yr)) +
        #geom_text(aes(x=as.Date("2004/06/15"), y=175, label="(2002-2007)"), size=8)
        #geom_rect(aes(xmin=as.Date('2002/01/01'), xmax=as.Date('2007/01/01'), 
        #              ymin=75, ymax=200), alpha=.002) +
-png('mean_EVI_250m_2yr.png', width=PLOT_WIDTH*PLOT_DPI, 
+png('mean_EVI_250m_24mth.png', width=PLOT_WIDTH*PLOT_DPI, 
     height=PLOT_HEIGHT*PLOT_DPI)
-print(mean_EVI_250m_2yr_plot)
+print(mean_EVI_250m_24mth_plot)
 dev.off()
 
 ###############################################################################
@@ -205,7 +206,7 @@ print(mean_EVI_250m_6mth_norm_plot)
 dev.off()
 
 # Make 1 year norm plot
-mean_EVI_250m_1yr_norm_plot <- ggplot(EVI_indicators, aes(Date, mean_EVI_250m_1yr_norm*100)) + 
+mean_EVI_250m_12mth_norm_plot <- ggplot(EVI_indicators, aes(Date, mean_EVI_250m_12mth_norm*100)) + 
        geom_line(aes(colour=NEIGHID)) + guides(colour=FALSE) +
        ylab('Percent of 2000-2001 mean EVI') + xlab('Date') +
        xlim(c(as.Date('2002/01/01'), as.Date('2012/01/01'))) +
@@ -215,13 +216,13 @@ mean_EVI_250m_1yr_norm_plot <- ggplot(EVI_indicators, aes(Date, mean_EVI_250m_1y
        geom_text(aes(x=as.Date("2004/06/15"), y=195, label="(2002-2007)"), size=8)
        #geom_rect(aes(xmin=as.Date('2002/01/01'), xmax=as.Date('2007/01/01'), 
        #              ymin=75, ymax=200), alpha=.002) +
-png('mean_EVI_250m_1yr_norm.png', width=PLOT_WIDTH*PLOT_DPI, 
+png('mean_EVI_250m_12mth_norm.png', width=PLOT_WIDTH*PLOT_DPI, 
     height=PLOT_HEIGHT*PLOT_DPI)
-print(mean_EVI_250m_1yr_norm_plot)
+print(mean_EVI_250m_12mth_norm_plot)
 dev.off()
 
 # Make 2 year norm plot
-mean_EVI_250m_2yr_norm_plot <- ggplot(EVI_indicators, aes(Date, mean_EVI_250m_2yr_norm*100)) + 
+mean_EVI_250m_24mth_norm_plot <- ggplot(EVI_indicators, aes(Date, mean_EVI_250m_24mth_norm*100)) + 
        geom_line(aes(colour=NEIGHID)) + guides(colour=FALSE) +
        ylab('Percent of 2000-2001 mean EVI') + xlab('Date') +
        xlim(c(as.Date('2002/01/01'), as.Date('2012/01/01'))) +
@@ -231,9 +232,9 @@ mean_EVI_250m_2yr_norm_plot <- ggplot(EVI_indicators, aes(Date, mean_EVI_250m_2y
        geom_text(aes(x=as.Date("2004/06/15"), y=175, label="(2002-2007)"), size=8)
        #geom_rect(aes(xmin=as.Date('2002/01/01'), xmax=as.Date('2007/01/01'), 
        #              ymin=75, ymax=200), alpha=.002) +
-png('mean_EVI_250m_2yr_norm.png', width=PLOT_WIDTH*PLOT_DPI, 
+png('mean_EVI_250m_24mth_norm.png', width=PLOT_WIDTH*PLOT_DPI, 
     height=PLOT_HEIGHT*PLOT_DPI)
-print(mean_EVI_250m_2yr_norm_plot)
+print(mean_EVI_250m_24mth_norm_plot)
 dev.off()
 
 EVI_daily_stats <- ddply(tts_results, .(Date), summarize,
@@ -248,12 +249,12 @@ EVI_annual_stats <- ddply(tts_results, .(Year), summarize,
                   max=max(mean_EVI_250m),
                   sd=sd(mean_EVI_250m))
 
-EVI_daily_stats$mean_2yr_roll <- filter(EVI_daily_stats$mean, filter_coefs_2yr)
+EVI_daily_stats$mean_24mth_roll <- filter(EVI_daily_stats$mean, filter_coefs_24mth)
 
 ggplot(EVI_daily_stats, aes(Date, mean)) + geom_line() + xlab('Time') +
     ylab('EVI mean (16 day)')
 
-ggplot(EVI_daily_stats, aes(Date, mean_2yr_roll)) + geom_line() + xlab('Time') +
+ggplot(EVI_daily_stats, aes(Date, mean_24mth_roll)) + geom_line() + xlab('Time') +
     ylab('2-year rolling mean EVI')
 
 ###############################################################################

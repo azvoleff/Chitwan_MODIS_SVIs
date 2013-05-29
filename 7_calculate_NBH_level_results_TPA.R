@@ -13,13 +13,13 @@ library(plyr)
 source('tpa2df.R')
 source('tpadf2raster.R')
 
-tpa_file_name <- 'R:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/Chitwan_MOD13Q1_EVI_Full_Series_Cropped_Expanded_TS.tpa'
+tpa_file_name <- 'G:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/Chitwan_MOD13Q1_EVI_Full_Series_Cropped_Expanded_TS.tpa'
 tpa_df <- tpa2df(tpa_file_name, 11)
 
-base_image_file <- 'R:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/2000001_MOD13Q1_EVI_scaled_flt16.envi'
+base_image_file <- 'G:/Data/Nepal/Imagery/MODIS/MOD13Q1_Chitwan_Cropped/2000001_MOD13Q1_EVI_scaled_flt16.envi'
 
 # First load CVFS nbh data  and convert to sp dataframe
-cvfs_nbhs <- readOGR('R:/Data/Nepal/GIS/CVFS_Data', 'cvfsns_with_elevations')
+cvfs_nbhs <- readOGR('G:/Data/Nepal/GIS/CVFS_Data', 'cvfsns_with_elevations')
 cvfs_nbhs <- cvfs_nbhs[cvfs_nbhs$NID <= 151, ]
 cvfs_nbhs$NEIGHID <- sprintf("%03i", cvfs_nbhs$NID)
 nbhs <- spTransform(cvfs_nbhs, CRS=CRS(projection(raster(base_image_file))))
@@ -28,7 +28,7 @@ nbhs <- spTransform(cvfs_nbhs, CRS=CRS(projection(raster(base_image_file))))
 #plot(raster(base_image_file)[[1]])
 #points(nbhs)
 
-CVFS_area_mask <- raster('R:/Data/Nepal/Imagery/MODIS/AOIs/CVFS_Study_Area_mask.img')
+CVFS_area_mask <- raster('G:/Data/Nepal/Imagery/MODIS/AOIs/CVFS_Study_Area_mask.img')
 projection(CVFS_area_mask) <- projection(raster(base_image_file))
 extent(CVFS_area_mask) <- extent(raster(base_image_file))
 res(CVFS_area_mask) <- res(raster(base_image_file))
@@ -88,9 +88,9 @@ filter_years <- 2
 filter_size <- 1*filter_years
 filter_coefs <- rep(1/filter_size, filter_size)
 tpa_results <- ddply(tpa_results, .(NEIGHID), transform,
-                     mean_amp_250m_2yr=filter(as.matrix(amp_250m), 
+                     mean_amp_250m_24mth=filter(as.matrix(amp_250m), 
                                               filter_coefs, sides=1),
-                     mean_amp_500m_2yr=filter(as.matrix(amp_500m), 
+                     mean_amp_500m_24mth=filter(as.matrix(amp_500m), 
                                               filter_coefs, sides=1))
 
 save(tpa_results, file='CVFS_NBHs_MODIS_tpa.Rdata')
@@ -98,9 +98,9 @@ save(tpa_results, file='CVFS_NBHs_MODIS_tpa.Rdata')
 seasonal_summary <- ddply(tpa_results, .(Year), summarize,
                      mean_amp_250m=mean(amp_250m, na.rm=TRUE),
                      mean_amp_500m=mean(amp_500m, na.rm=TRUE),
-                     mean_amp_250m_2yr=mean(mean_amp_250m_2yr),
-                     mean_amp_250m_2yr=mean(mean_amp_250m_2yr))
+                     mean_amp_250m_24mth=mean(mean_amp_250m_24mth),
+                     mean_amp_250m_24mth=mean(mean_amp_250m_24mth))
 
 qplot(Year, mean_amp_250m, data=seasonal_summary, geom='line')
 
-qplot(Year, mean_amp_250m_2yr, data=seasonal_summary, geom='line')
+qplot(Year, mean_amp_250m_24mth, data=seasonal_summary, geom='line')
