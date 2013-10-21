@@ -55,7 +55,7 @@ tpa_results$NEIGHID <- sprintf("%03i", tpa_results$NEIGHID)
 
 buffer_dists_m <- c(250, 500)
 variables <- c('start_julian', 'end_julian', 'length_days', 'base_value', 
-               'peak_time_julian', 'peak_value', 'amp')
+               'peak_time_julian', 'peak_value', 'amp', 'Linteg', 'Sinteg')
 for (variable in variables) {
     tparaster <- tpadf2raster(tpa_df, base_image_file, variable)
     # Mask values outside CVFS study area (so rivers, Barandabar, etc. 
@@ -70,6 +70,8 @@ for (variable in variables) {
         tpa_results <- cbind(tpa_results, extract_vals)
     }
 }
+
+write.csv(tpa_results, file="Chitwan_NBHs_Seasonal_Metrics_long.csv", row.names=FALSE)
 qplot(Year, start_julian_250m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
 
 qplot(Year, end_julian_250m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
@@ -82,7 +84,9 @@ qplot(Year, length_days_500m, geom='line', colour=NEIGHID, data=tpa_results) + g
 
 qplot(Year, amp_250m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
 
-qplot(Year, amp_500m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
+qplot(Year, Sinteg_500m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
+
+qplot(Year, Linteg_500m, geom='line', colour=NEIGHID, data=tpa_results) + guides(colour=FALSE)
 
 filter_years <- 2
 filter_size <- 1*filter_years
@@ -91,6 +95,14 @@ tpa_results <- ddply(tpa_results, .(NEIGHID), transform,
                      mean_amp_250m_24mth=filter(as.matrix(amp_250m), 
                                               filter_coefs, sides=1),
                      mean_amp_500m_24mth=filter(as.matrix(amp_500m), 
+                                              filter_coefs, sides=1),
+                     mean_Linteg_250m_24mth=filter(as.matrix(Linteg_250m), 
+                                              filter_coefs, sides=1),
+                     mean_Linteg_500m_24mth=filter(as.matrix(Linteg_500m), 
+                                              filter_coefs, sides=1),
+                     mean_Sinteg_250m_24mth=filter(as.matrix(Sinteg_250m), 
+                                              filter_coefs, sides=1),
+                     mean_Sinteg_500m_24mth=filter(as.matrix(Sinteg_500m), 
                                               filter_coefs, sides=1))
 
 save(tpa_results, file='CVFS_NBHs_MODIS_tpa.Rdata')

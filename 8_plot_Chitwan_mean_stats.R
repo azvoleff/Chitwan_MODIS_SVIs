@@ -92,19 +92,19 @@ EVI_monthly$mean_EVI_24mth_norm <- EVI_monthly$mean_EVI_24mth/EVI_monthly$mean_E
 
 save(EVI_monthly, file='EVI_monthly_mean_over_valley.Rdata')
 
-qplot(Date, mean_EVI, geom='line', data=EVI_monthly)
-
-qplot(Date, mean_EVI_3mth, geom='line', data=EVI_monthly)
-qplot(Date, mean_EVI_6mth, geom='line', data=EVI_monthly)
-qplot(Date, mean_EVI_9mth, geom='line', data=EVI_monthly)
-qplot(Date, mean_EVI_12mth, geom='line', data=EVI_monthly)
-qplot(Date, mean_EVI_24mth, geom='line', data=EVI_monthly)
-
-qplot(Date, mean_EVI_3mth_norm, geom='line', data=EVI_monthly)
-qplot(Date, mean_EVI_6mth_norm, geom='line', data=EVI_monthly)
-qplot(Date, mean_EVI_9mth_norm, geom='line', data=EVI_monthly)
-qplot(Date, mean_EVI_12mth_norm, geom='line', data=EVI_monthly)
-qplot(Date, mean_EVI_24mth_norm, geom='line', data=EVI_monthly)
+# qplot(Date, mean_EVI, geom='line', data=EVI_monthly)
+# 
+# qplot(Date, mean_EVI_3mth, geom='line', data=EVI_monthly)
+# qplot(Date, mean_EVI_6mth, geom='line', data=EVI_monthly)
+# qplot(Date, mean_EVI_9mth, geom='line', data=EVI_monthly)
+# qplot(Date, mean_EVI_12mth, geom='line', data=EVI_monthly)
+# qplot(Date, mean_EVI_24mth, geom='line', data=EVI_monthly)
+# 
+# qplot(Date, mean_EVI_3mth_norm, geom='line', data=EVI_monthly)
+# qplot(Date, mean_EVI_6mth_norm, geom='line', data=EVI_monthly)
+# qplot(Date, mean_EVI_9mth_norm, geom='line', data=EVI_monthly)
+# qplot(Date, mean_EVI_12mth_norm, geom='line', data=EVI_monthly)
+# qplot(Date, mean_EVI_24mth_norm, geom='line', data=EVI_monthly)
 
 EVI_monthly_plot <- ggplot(EVI_monthly, aes(Date, mean_EVI_6mth)) + 
        geom_line() + 
@@ -167,7 +167,7 @@ tpa_df$peak_julian <- as.numeric(format(tpa_df$peak_date, '%j'))
 tpa_df$length_days <- as.numeric(tpa_df$length * (365.25/23))
 
 valley_means <- data.frame(Year=seq(as.Date('2000/01/01'), as.Date('2010/01/01'), by='year'))
-get_masked_mean_tpa_variable <- function(variable) {
+get_masked_tpa_variable <- function(variable) {
     tparaster <- tpadf2raster(tpa_df, base_image_file, variable)
     # Mask values outside CVFS study area (so rivers, Barandabar, etc.  are not 
     # included in EVI calculation).
@@ -178,18 +178,54 @@ get_masked_mean_tpa_variable <- function(variable) {
 # bimodal (with end dates at the end and beginning of the year since the season 
 # stretches through December and into January
 valley_means <- cbind(valley_means,
-                      amp=cellStats(get_masked_mean_tpa_variable('amp'), 
+                      amp=cellStats(get_masked_tpa_variable('amp'), 
                                          stat='mean', na.rm=TRUE),
-                      start_julian=cellStats(get_masked_mean_tpa_variable('start_julian'), 
+                      start_julian=cellStats(get_masked_tpa_variable('start_julian'), 
                                                   stat='mean', na.rm=TRUE),
-                      peak_julian=cellStats(get_masked_mean_tpa_variable('peak_julian'), 
+                      peak_julian=cellStats(get_masked_tpa_variable('peak_julian'), 
                                             stat='mean', na.rm=TRUE),
-                      length_days=cellStats(get_masked_mean_tpa_variable('length_days'), 
+                      Sinteg_mean=cellStats(get_masked_tpa_variable('Sinteg'), 
+                                            stat='mean', na.rm=TRUE),
+                      Linteg_mean=cellStats(get_masked_tpa_variable('Linteg'), 
+                                            stat='mean', na.rm=TRUE),
+                      Sinteg_sum=cellStats(get_masked_tpa_variable('Sinteg'), 
+                                            stat='sum', na.rm=TRUE),
+                      Linteg_sum=cellStats(get_masked_tpa_variable('Linteg'), 
+                                            stat='sum', na.rm=TRUE),
+                      length_days=cellStats(get_masked_tpa_variable('length_days'), 
                                             stat='mean', na.rm=TRUE))
 valley_means$start_date <- as.Date(paste(9999, valley_means$start_julian), '%Y %j')
 valley_means$peak_date <- as.Date(paste(9999, valley_means$peak_julian), '%Y %j')
 valley_means$start_date_string <- as.character(valley_means$start_date)
 valley_means$peak_date_string <- as.character(valley_means$peak_date)
+
+valley_means_Sinteg_sum_plot <- ggplot(valley_means, aes(Year, Sinteg_sum)) + 
+       geom_line() + guides(colour=FALSE) + geom_point(size=4) +
+       ylab('Total seasonal growth(EVI)') + xlab('Date') +
+       geom_vline(aes(xintercept=as.numeric(as.Date('2002/01/01'))), linetype=2) +
+       geom_vline(aes(xintercept=as.numeric(as.Date('2007/01/01'))), linetype=2)
+       #geom_text(aes(x=as.Date("2004/06/15"), y=260, label="CVFS Registry Data"), size=8) +
+       #geom_text(aes(x=as.Date("2004/06/15"), y=250, label="(2002-2007)"), size=8)
+       #geom_rect(aes(xmin=as.Date('2002/01/01'), xmax=as.Date('2007/01/01'), 
+       #              ymin=75, ymax=200), alpha=.002) +
+png('valley_means_Sinteg_sum_plot.png', width=PLOT_WIDTH*PLOT_DPI, 
+    height=PLOT_HEIGHT*PLOT_DPI)
+print(valley_means_Sinteg_sum_plot)
+dev.off()
+
+valley_means_Linteg_sum_plot <- ggplot(valley_means, aes(Year, Linteg_sum)) + 
+       geom_line() + guides(colour=FALSE) + geom_point(size=4) +
+       ylab('Total vegetation growth (EVI)') + xlab('Date') +
+       geom_vline(aes(xintercept=as.numeric(as.Date('2002/01/01'))), linetype=2) +
+       geom_vline(aes(xintercept=as.numeric(as.Date('2007/01/01'))), linetype=2)
+       #geom_text(aes(x=as.Date("2004/06/15"), y=260, label="CVFS Registry Data"), size=8) +
+       #geom_text(aes(x=as.Date("2004/06/15"), y=250, label="(2002-2007)"), size=8)
+       #geom_rect(aes(xmin=as.Date('2002/01/01'), xmax=as.Date('2007/01/01'), 
+       #              ymin=75, ymax=200), alpha=.002) +
+png('valley_means_Linteg_sum_plot.png', width=PLOT_WIDTH*PLOT_DPI, 
+    height=PLOT_HEIGHT*PLOT_DPI)
+print(valley_means_Linteg_sum_plot)
+dev.off()
 
 valley_means_amp_plot <- ggplot(valley_means, aes(Year, amp)) + 
        geom_line() + guides(colour=FALSE) + geom_point(size=4) +
